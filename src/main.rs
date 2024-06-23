@@ -28,15 +28,16 @@ struct Cli {
                         // Start the background service updating the matrix
                         // start: bool,
 
-                        // #[arg(long)]
-                        // JSON config file path
-                        // config: Option<String>,
+    #[arg(long, default_value=None)]
+    // JSON config file path
+    config: Option<String>,
 }
 
 enum Program {
     ListMod,
     ListWid,
     Default,
+    LoadFromConfiguration,
 }
 
 fn main() {
@@ -46,13 +47,15 @@ fn main() {
     // update rate
 
     let mut program = Program::Default;
+    let cli = Cli::parse();
 
     if args_os().len() > 1 {
-        let cli = Cli::parse();
         if cli.list_modules {
             program = Program::ListMod;
         } else if cli.list_widgets {
             program = Program::ListWid;
+        } else if cli.config != None {
+            program = Program::LoadFromConfiguration;
         }
     }
 
@@ -77,7 +80,7 @@ fn main() {
                 }
 
                 loop {
-                    bat.update();
+                    // bat.update();
                     cpu.update();
                     clock.update();
 
@@ -89,6 +92,19 @@ fn main() {
                     thread::sleep(Duration::from_millis(2000));
                 }
             }
+        }
+        Program::LoadFromConfiguration => {
+            match cli.config {
+                Some(config_file_location) => {
+                    println!("Loading from configuration: {0}", config_file_location);
+                    exit(0);
+                }
+                None => {
+                    println!("Missing config file specification");
+                    exit(1);
+                }
+            }
+            
         }
         Program::ListMod => {
             LedMatrix::detect();
